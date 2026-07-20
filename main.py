@@ -22,7 +22,66 @@ def run_web_server():
 # --- AYARLARINIZ ---
 BOT_TOKEN = "8800165896:AAHDSixZvv7UMVYWmerLEwoBi5DhcPoUwqQ"
 CHAT_ID = "@Bvg564bot"  # Sinyallerin düşeceği kanal
-COINS = ["BTCUSDT", "ETHUSDT", "SOLUSDT"]
+COINS = [COINS =
+    # Major & Katman 1/2
+    "BTCUSDT",
+    "ETHUSDT",
+    "SOLUSDT",
+    "XRPUSDT",
+    "ADAUSDT",
+    "AVAXUSDT",
+    "DOGEUSDT",
+    "DOTUSDT",
+    "LINKUSDT",
+    "MATICUSDT",
+    "SHIBUSDT",
+    "LTCUSDT",
+    "NEARUSDT",
+    "APTUSDT",
+    "ARBUSDT",
+    "OPUSDT",
+    "SUIUSDT",
+    "ATOMUSDT",
+    "BCHUSDT",
+    "ALGOUSDT",
+    "FTMUSDT",
+    "ETCUSDT",
+    "TRXUSDT",
+    "XLMUSDT",
+    "BNBUSDT",
+    "CROUSDT",
+    "CFXUSDT",
+    "KASUSDT",
+    # Yapay Zeka & Veri
+    "FETUSDT",
+    "RENDERUSDT",
+    "GRTUSDT",
+    "ARKMUSDT",
+    "ROSEUSDT",
+    "IOUSDT",
+    "VANAUSDT",
+    "ACTUSDT",
+    # Memecoinler & Popüler Tokenlar
+    "PEPEUSDT",
+    "WIFUSDT",
+    "FLOKIUSDT",
+    "BONKUSDT",
+    "DOGSUSDT",
+    "CATIUSDT",
+    "HMSTRUSDT",
+    "MEWUSDT",
+    "MOGUSDT",
+    # DeFi & Ekosistem
+    "INJUSDT",
+    "TIAUSDT",
+    "RUNEUSDT",
+    "AEROUSDT",
+    "1INCHUSDT",
+    "NEXOUSDT",
+    "ASTRUSDT",
+    "ZETAUSDT",
+    "ENSUSDT",
+]
 
 
 def send_telegram(chat_id, message):
