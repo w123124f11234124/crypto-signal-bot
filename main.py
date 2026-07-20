@@ -1,75 +1,112 @@
+from http.server import BaseHTTPRequestHandler, HTTPServer
 import json
 from threading import Thread
 import time
 import urllib.request
-from flask import Flask
-
-# Render'ın kapanmaması için Web Sunucusu
-app = Flask(__name__)
 
 
-@app.route('/')
-def home():
-  return 'Sinyal Botu 7/24 Aktif!'
+# --- RENDER İÇİN MİNİK WEB SUNUCUSU ---
+class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
+
+  def do_GET(self):
+    self.send_response(200)
+    self.end_headers()
+    self.wfile.write(b"Bot 7/24 Aktif!")
+
+
+def run_web_server():
+  server = HTTPServer(("0.0.0.0", 10000), SimpleHTTPRequestHandler)
+  server.serve_forever()
 
 
 # --- AYARLARINIZ ---
-BOT_TOKEN = '8800165896:AAHDSixZvv7UMVYWmerLEwoBi5DhcPoUwqQ'
-CHAT_ID = '@Bvg564bot'
-COINS = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT']
+BOT_TOKEN = "8800165896:AAHDSixZvv7UMVYWmerLEwoBi5DhcPoUwqQ"
+CHAT_ID = "@Bvg564bot"  # Sinyallerin düşeceği kanal
+COINS = ["BTCUSDT", "ETHUSDT", "SOLUSDT"]
 
 
-def send_telegram(message):
-  url = f'https://api.telegram.org/bot{BOT_TOKEN}/sendMessage'
+def send_telegram(chat_id, message):
+  """Belirtilen CHAT_ID'ye mesaj atar"""
+  url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
   data = json.dumps({
-      'chat_id': CHAT_ID,
-      'text': message,
-      'parse_mode': 'Markdown',
-  }).encode('utf-8')
+      "chat_id": chat_id,
+      "text": message,
+      "parse_mode": "Markdown",
+  }).encode("utf-8")
 
   req = urllib.request.Request(
-      url, data=data, headers={'Content-Type': 'application/json'}
+      url, data=data, headers={"Content-Type": "application/json"}
   )
   try:
     urllib.request.urlopen(req)
-    print('Telegram mesajı gönderildi!')
+    print("Mesaj başarıyla gönderildi!")
   except Exception as e:
-    print('Telegram gönderme hatası:', e)
+    print("Mesaj gönderme hatası:", e)
+
+
+def check_user_messages():
+  """Gelen /start mesajlarını dinler ve cevap verir"""
+  last_update_id = 0
+  while True:
+    try:
+      url = f"https://api.telegram.org/bot{BOT_TOKEN}/getUpdates?offset={last_update_id + 1}&timeout=30"
+      req = urllib.request.urlopen(url)
+      data = json.loads(req.read().decode("utf-8"))
+
+      for update in data.get("result", []):
+        last_update_id = update["update_id"]
+        if "message" in update and "text" in update["message"]:
+          text = update["message"]["text"]
+          user_chat_id = update["message"]["chat"]["id"]
+
+          if text == "/start":
+            reply = (
+                "👋 **Merhaba! Sinyal Botu Aktif.**\n\n"
+                "Arka planda piyasayı tarıyorum, alım fırsatı olduğunda kanala sinyal atacağım!"
+            )
+            send_telegram(user_chat_id, reply)
+    except Exception as e:
+      print("Mesaj dinleme hatası:", e)
+      time.sleep(5)
 
 
 def crypto_loop():
-  # Render açılır açılmaz test mesajı atması için
+  """Kripto piyasasını tarar ve kanala sinyal atar"""
   time.sleep(5)
-  send_telegram('🤖 **Sinyal Botu Başarıyla Başlatıldı ve Canlıda!**')
+  # Bot açılır açılmaz kanala test mesajı gönderir:
+  send_telegram(
+      CHAT_ID, "🚀 **Sinyal Botu Başarıyla Başlatıldı ve Canlıda!**"
+  )
 
   while True:
     for coin in COINS:
       try:
-        url = f'https://api.binance.com/api/v3/ticker/24hr?symbol={coin}'
+        url = f"https://api.binance.com/api/v3/ticker/24hr?symbol={coin}"
         req = urllib.request.urlopen(url)
-        data = json.loads(req.read().decode('utf-8'))
+        data = json.loads(req.read().decode("utf-8"))
 
-        price = float(data['lastPrice'])
-        price_change = float(data['priceChangePercent'])
+        price = float(data["lastPrice"])
+        price_change = float(data["priceChangePercent"])
 
-        # Koşul: %3 ve üzeri düşüşlerde mesaj at
-        if price_change <= -3.0:
+        # KOŞUL: Düşüş yaşandığında Sinyal At
+        if price_change <= -2.0:  # Testi rahat görmeniz için -%2 yaptık
           msg = (
-              f'🚨 **KRİPTO AL SİNYALİ** 🚨\n\n'
-              f'🪙 **Koin:** #{coin}\n'
-              f'💵 **Fiyat:** ${price}\n'
-              f'📉 **24s Değişim:** %{price_change:.2f}'
+              f"🚨 **KRİPTO AL SİNYALİ** 🚨\n\n"
+              f"🪙 **Koin:** #{coin}\n"
+              f"💵 **Fiyat:** ${price}\n"
+              f"📉 **24s Değişim:** %{price_change:.2f}"
           )
-          send_telegram(msg)
+          send_telegram(CHAT_ID, msg)
       except Exception as e:
-        print(f'{coin} hatası:', e)
+        print(f"{coin} hatası:", e)
 
-    # 5 dakikada bir kontrol et
-    time.sleep(300)
+    time.sleep(300)  # 5 dakikada bir kontrol et
 
 
-# Arka plan tarama thread'i
-Thread(target=crypto_loop, daemon=True).start()
-
-if __name__ == '__main__':
-  app.run(host='0.0.0.0', port=10000)
+if __name__ == "__main__":
+  # 1. Web Sunucusunu Başlat
+  Thread(target=run_web_server, daemon=True).start()
+  # 2. Gelen /start Mesajlarını Dinlemeyi Başlat
+  Thread(target=check_user_messages, daemon=True).start()
+  # 3. Kripto Tarayıcısını Başlat
+  crypto_loop()
