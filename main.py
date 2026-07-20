@@ -15,7 +15,7 @@ def home():
 
 # --- AYARLARINIZ ---
 BOT_TOKEN = '8800165896:AAHDSixZvv7UMVYWmerLEwoBi5DhcPoUwqQ'
-CHAT_ID = '@Bvg564bot'  # Örn: @kriptosinyallerim
+CHAT_ID = '@Bvg564bot'
 COINS = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT']
 
 
